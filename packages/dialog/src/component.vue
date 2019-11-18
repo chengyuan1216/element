@@ -96,7 +96,8 @@
         type: String,
         default: ''
       },
-
+      
+      // 距离顶部的距离
       top: {
         type: String,
         default: '15vh'
@@ -107,6 +108,7 @@
         default: false
       },
 
+      // 关闭时销毁 Dialog 中的元素
       destroyOnClose: Boolean
     },
 
@@ -119,19 +121,30 @@
 
     watch: {
       visible(val) {
+        debugger
         if (val) {
+          // 一个标识
           this.closed = false;
           this.$emit('open');
+
+          // TODO: 
           this.$el.addEventListener('scroll', this.updatePopper);
+
+          // 让滚动条的位置回到顶部
           this.$nextTick(() => {
             this.$refs.dialog.scrollTop = 0;
           });
+
+          // 如果是appendToBody, 则将弹窗移动到body
           if (this.appendToBody) {
             document.body.appendChild(this.$el);
           }
         } else {
+          // TODO:
           this.$el.removeEventListener('scroll', this.updatePopper);
           if (!this.closed) this.$emit('close');
+
+          // 修改key的之后， vue下一次渲染将不会复用上一次的DOM
           if (this.destroyOnClose) {
             this.$nextTick(() => {
               this.key++;

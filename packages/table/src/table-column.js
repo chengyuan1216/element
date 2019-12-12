@@ -67,14 +67,17 @@ export default {
   },
 
   computed: {
+    // 获取表格实例
     owner() {
       let parent = this.$parent;
+      // 如果有tableId代表这是table实例
       while (parent && !parent.tableId) {
         parent = parent.$parent;
       }
       return parent;
     },
 
+    // 获取column父组件或者table父组件
     columnOrTableParent() {
       let parent = this.$parent;
       while (parent && !parent.tableId && !parent.columnId) {
@@ -211,6 +214,7 @@ export default {
       Object.keys(allAliases).forEach(key => {
         const columnKey = aliases[key];
 
+        // 属性变化后， 更新columnConfig
         this.$watch(key, (newVal) => {
           this.columnConfig[columnKey] = newVal;
         });
@@ -230,7 +234,8 @@ export default {
 
       Object.keys(allAliases).forEach(key => {
         const columnKey = aliases[key];
-
+        
+        // 如果fixed变化了， 不仅要更新columnConfig 也要更新layout
         this.$watch(key, (newVal) => {
           this.columnConfig[columnKey] = newVal;
           const updateColumns = columnKey === 'fixed';
@@ -253,43 +258,56 @@ export default {
 
   created() {
     const parent = this.columnOrTableParent;
+    // 是否是子列
     this.isSubColumn = this.owner !== parent;
     this.columnId = (parent.tableId || parent.columnId) + '_column_' + columnIdSeed++;
 
+    // 列的类型section、default、index
     const type = this.type || 'default';
+    // 是否排序
     const sortable = this.sortable === '' ? true : this.sortable;
     const defaults = {
-      ...cellStarts[type],
-      id: this.columnId,
-      type: type,
+      ...cellStarts[type], // 不同的列会有一些不同的默认配置
+      id: this.columnId, // 列id
+      type: type, // 列类型
       property: this.prop || this.property,
-      align: this.realAlign,
-      headerAlign: this.realHeaderAlign,
-      showOverflowTooltip: this.showOverflowTooltip || this.showTooltipWhenOverflow,
+      align: this.realAlign, // 单元格内容的对齐方式
+      headerAlign: this.realHeaderAlign, // 表头的对齐方式
+      showOverflowTooltip: this.showOverflowTooltip || this.showTooltipWhenOverflow, // 是否超出展示tooltip
       // filter 相关属性
-      filterable: this.filters || this.filterMethod,
-      filteredValue: [],
-      filterPlacement: '',
-      isColumnGroup: false,
+      filterable: this.filters || this.filterMethod, //是否过滤
+      filteredValue: [], // 过滤的值
+      filterPlacement: '', // ?
+      isColumnGroup: false, 
       filterOpened: false,
       // sort 相关属性
-      sortable: sortable,
+      sortable: sortable, // 是否排序
       // index 列
       index: this.index
     };
 
+    // 基本属性
     const basicProps = ['columnKey', 'label', 'className', 'labelClassName', 'type', 'renderHeader', 'formatter', 'fixed', 'resizable'];
+    // 排序属性
     const sortProps = ['sortMethod', 'sortBy', 'sortOrders'];
+    // 多选属性 selectable 是否可选 reserveSelection 是否在数据更新之后保留之前选中的数据
     const selectProps = ['selectable', 'reserveSelection'];
+    // 过滤属性
     const filterProps = ['filterMethod', 'filters', 'filterMultiple', 'filterOpened', 'filteredValue', 'filterPlacement'];
 
+    // 将所有的属性合并为column对象
     let column = this.getPropsData(basicProps, sortProps, selectProps, filterProps);
+
+    // 将用户的对象与默认对象合并
     column = mergeOptions(defaults, column);
 
     // 注意 compose 中函数执行的顺序是从右到左
     const chains = compose(this.setColumnRenders, this.setColumnWidth, this.setColumnForcedProps);
+    // 链式操作，从右边往左边执行
+    // 右边方法的返回值将会作为左边方法的参数
     column = chains(column);
 
+    // 得到最终的列配置
     this.columnConfig = column;
 
     // 注册 watcher
@@ -301,14 +319,17 @@ export default {
     const owner = this.owner;
     const parent = this.columnOrTableParent;
     const children = this.isSubColumn ? parent.$el.children : parent.$refs.hiddenColumns.children;
+    // 获取当前列的索引
     const columnIndex = this.getColumnElIndex(children, this.$el);
 
+    // 将当前列插入到store对象中
     owner.store.commit('insertColumn', this.columnConfig, columnIndex, this.isSubColumn ? parent.columnConfig : null);
   },
 
   destroyed() {
     if (!this.$parent) return;
     const parent = this.$parent;
+    // 将当前列从store移除
     this.owner.store.commit('removeColumn', this.columnConfig, this.isSubColumn ? parent.columnConfig : null);
   },
 

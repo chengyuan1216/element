@@ -13,7 +13,9 @@
       'el-table--enable-row-transition': (store.states.data || []).length !== 0 && (store.states.data || []).length < 100
     }, tableSize ? `el-table--${ tableSize }` : '']"
     @mouseleave="handleMouseLeave($event)">
+    <!-- 列定义将会渲染成一个空的div被隐藏起来，table-column的作用是用于收集列信息 -->
     <div class="hidden-columns" ref="hiddenColumns"><slot></slot></div>
+    <!-- table-header 表头 -->
     <div
       v-if="showHeader"
       v-mousewheel="handleHeaderFooterMousewheel"
@@ -29,6 +31,7 @@
         }">
       </table-header>
     </div>
+    <!-- table-body -->
     <div
       class="el-table__body-wrapper"
       ref="bodyWrapper"
@@ -61,6 +64,7 @@
         <slot name="append"></slot>
       </div>
     </div>
+    <!-- table-footer -->
     <div
       v-if="showSummary"
       v-show="data && data.length > 0"
@@ -78,6 +82,7 @@
         }">
       </table-footer>
     </div>
+    <!-- fixed left -->
     <div
       v-if="fixedColumns.length > 0"
       v-mousewheel="handleFixedMousewheel"
@@ -139,6 +144,7 @@
           }"></table-footer>
       </div>
     </div>
+    <!-- fixed right -->
     <div
       v-if="rightFixedColumns.length > 0"
       v-mousewheel="handleFixedMousewheel"
@@ -208,6 +214,7 @@
         width: layout.scrollY ? layout.gutterWidth + 'px' : '0',
         height: layout.headerHeight + 'px'
       }"></div>
+    <!-- 监听el-table div的尺寸变化 -->
     <div class="el-table__column-resize-proxy" ref="resizeProxy" v-show="resizeProxyVisible"></div>
   </div>
 </template>
@@ -234,7 +241,7 @@
     mixins: [Locale, Migrating],
 
     directives: {
-      Mousewheel
+      Mousewheel // 增加滚轮事件
     },
 
     props: {
@@ -430,6 +437,7 @@
       }),
 
       bindEvents() {
+        // body 监听滚动事件
         this.bodyWrapper.addEventListener('scroll', this.syncPostion, { passive: true });
         if (this.fit) {
           addResizeListener(this.$el, this.resizeListener);
@@ -437,12 +445,14 @@
       },
 
       unbindEvents() {
+        // body 注销滚动事件
         this.bodyWrapper.removeEventListener('scroll', this.syncPostion, { passive: true });
         if (this.fit) {
           removeResizeListener(this.$el, this.resizeListener);
         }
       },
 
+      // 表格尺寸变化时的回调
       resizeListener() {
         if (!this.$ready) return;
         let shouldUpdateLayout = false;
@@ -627,11 +637,14 @@
 
     created() {
       this.tableId = 'el-table_' + tableIdSeed++;
+      // 防抖
       this.debouncedUpdateLayout = debounce(50, () => this.doLayout());
     },
 
     mounted() {
+      // 绑定事件
       this.bindEvents();
+      // 
       this.store.updateColumns();
       this.doLayout();
 
@@ -659,7 +672,12 @@
     },
 
     data() {
+      // 树表
+      // children: 子级列表，hasChildren懒加载子级
       const { hasChildren = 'hasChildren', children = 'children' } = this.treeProps;
+      // store其实是一个vm实例， 但是并没有render方法
+      // 组件的数据源可以是组件自己data中定义的数据， 也可以是在其他组件实例中的数据。
+      // 这两种数据源都可以被收集和通知
       this.store = createStore(this, {
         rowKey: this.rowKey,
         defaultExpandAll: this.defaultExpandAll,
@@ -670,6 +688,8 @@
         lazyColumnIdentifier: hasChildren,
         childrenColumnName: children
       });
+
+      // 布局
       const layout = new TableLayout({
         store: this.store,
         table: this,

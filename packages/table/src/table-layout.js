@@ -26,6 +26,7 @@ class TableLayout {
     this.fixedBodyHeight = null; // Table Height - Table Header Height - Scroll Bar Height
     this.gutterWidth = scrollbarWidth();
 
+    // 赋值操作
     for (let name in options) {
       if (options.hasOwnProperty(name)) {
         this[name] = options[name];

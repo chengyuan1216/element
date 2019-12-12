@@ -11,6 +11,7 @@ export function createStore(table, initialState = {}) {
   // fix https://github.com/ElemeFE/element/issues/14075
   // related pr https://github.com/ElemeFE/element/pull/14146
   store.toggleAllSelection = debounce(10, store._toggleAllSelection);
+  // 将初始状态赋值给store对象
   Object.keys(initialState).forEach(key => {
     store.states[key] = initialState[key];
   });

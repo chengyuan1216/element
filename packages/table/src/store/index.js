@@ -27,6 +27,7 @@ Watcher.prototype.mutations = {
     this.updateTableScrollY();
   },
 
+  // 插入一列
   insertColumn(states, column, index, parent) {
     let array = states._columns;
     if (parent) {
